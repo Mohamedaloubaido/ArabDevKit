@@ -57,18 +57,10 @@ function extractField(bban: string, field: { start: number; length: number }): s
   return bban.slice(start, start + field.length);
 }
 
-/**
- * ISO 13616 MOD-97 checksum validation, implemented as a streaming remainder
- * so it never relies on an integer larger than JavaScript can represent exactly.
- */
-export function hasValidIbanChecksum(input: string): boolean {
-  const iban = normalizeIban(input);
-  if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/.test(iban)) return false;
-
-  const rearranged = `${iban.slice(4)}${iban.slice(0, 4)}`;
+function mod97(input: string): number {
   let remainder = 0;
 
-  for (const char of rearranged) {
+  for (const char of input) {
     const numeric = char >= "A" && char <= "Z"
       ? String(char.charCodeAt(0) - 55)
       : char;
@@ -78,7 +70,31 @@ export function hasValidIbanChecksum(input: string): boolean {
     }
   }
 
-  return remainder === 1;
+  return remainder;
+}
+
+/**
+ * ISO 13616 MOD-97 checksum validation, implemented as a streaming remainder
+ * so it never relies on an integer larger than JavaScript can represent exactly.
+ */
+export function hasValidIbanChecksum(input: string): boolean {
+  const iban = normalizeIban(input);
+  if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/.test(iban)) return false;
+
+  const rearranged = `${iban.slice(4)}${iban.slice(0, 4)}`;
+  return mod97(rearranged) === 1;
+}
+
+/** Build a checksum-valid IBAN from a country code and a BBAN that matches the SWIFT-backed country format. */
+export function createIban(countryCode: ArabIbanCountryCode, bbanInput: string): string | null {
+  const spec = getArabIbanSpec(countryCode);
+  const bban = toLatinDigits(bbanInput).replace(/\s+/g, "").toUpperCase();
+  const bbanRegex = new RegExp(`^${spec.bbanPattern}$`);
+  if (bban.length !== spec.bbanLength || !bbanRegex.test(bban)) return null;
+
+  const checkInput = `${bban}${countryCode}00`;
+  const checkDigits = String(98 - mod97(checkInput)).padStart(2, "0");
+  return `${countryCode}${checkDigits}${bban}`;
 }
 
 export function validateIban(

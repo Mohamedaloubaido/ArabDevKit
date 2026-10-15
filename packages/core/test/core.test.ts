@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  createIban,
   findCountryByCallingCode,
   formatMoney,
   getCountry,
   isArabCountryCode,
+  isValidIban,
   listCountries,
   normalizeArabic,
   toArabicIndicDigits,
@@ -103,5 +105,11 @@ describe("IBAN", () => {
     const jordan = parseIban("JO94CBJO0010000000000131000302");
     expect(jordan?.bankIdentifier).toBe("CBJO");
     expect(jordan?.branchIdentifier).toBe("0010");
+  });
+
+  it("builds checksum-valid IBANs from valid BBANs", () => {
+    const iban = createIban("SA", "80000000608010167519");
+    expect(iban).toBe("SA0380000000608010167519");
+    expect(isValidIban(iban ?? "", "SA")).toBe(true);
   });
 });
