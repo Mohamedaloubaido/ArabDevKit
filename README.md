@@ -76,6 +76,30 @@ parseIban("JO94 CBJO 0010 0000 0000 0131 0003 02");
 // { countryCode: "JO", bankIdentifier: "CBJO", branchIdentifier: "0010", ... }
 ```
 
+## Capability matrix
+
+ArabDevKit exposes the configured support level for every Arab market instead of implying that every country has identical rules.
+
+```ts
+import { getCountryCapabilities, listCountryCapabilities } from "@arabdevkit/core";
+
+getCountryCapabilities("SA");
+// address: structured, postal: postal-code, iban: true, taxIdentifiers: ["vat", "tin"], ...
+
+listCountryCapabilities().length;
+// 22
+```
+
+From the CLI:
+
+```bash
+arabdevkit country SA
+arabdevkit matrix
+arabdevkit matrix --json
+```
+
+`generic`, `unverified`, and `verification-only` are deliberate states. They prevent the toolkit from presenting unsourced market assumptions as verified rules.
+
 ## IBAN coverage
 
 ArabDevKit validates ISO 13616 structure + BBAN country format + MOD-97 checksum for **18 Arab markets** currently present in the SWIFT IBAN Registry:
@@ -148,7 +172,7 @@ faker.eg.person();
 faker.ae.address();
 ```
 
-Faker data is synthetic test data. Phone generation is derived from `libphonenumber-js` mobile example metada and revalidated before being returned. Generated IBANs match the configured country structure and MOD-97 checksum, but **must never be treated as real bank accounts or used for payments**.
+Faker data is synthetic test data. Phone generation is derived from `libphonenumber-js` mobile example metadata and revalidated before being returned. Generated IBANs match the configured country structure and MOD-97 checksum, but **must never be treated as real bank accounts or used for payments**.
 
 ### React
 
@@ -161,7 +185,7 @@ import { ArabAddressForm, ArabPhoneInput, CountrySelect, IbanInput } from "@arab
   language="ar"
   includeCallingCode
   onCountryChange={(country) => console.log(country.code)}
-/>
+/>;
 
 <ArabPhoneInput
   country="SA"
@@ -244,6 +268,7 @@ See `docs/business-sources.md` for the authority sources and verification bounda
 pnpm add -g @arabdevkit/cli
 
 arabdevkit country SA
+arabdevkit matrix
 arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
 arabdevkit phone "0501234567" --country SA
 arabdevkit tax "310122393500003" --country SA --kind vat
@@ -266,6 +291,12 @@ arabdevkit check --country AE --path ./my-app
 ```
 
 The resulting score is explicitly **heuristic**. It is a developer checklist, not a legal, regulatory, accessibility, security, or production-readiness certification.
+
+## Framework examples
+
+- [Next.js Saudi checkout](./examples/nextjs-saudi-checkout) — App Router + Server Action + server-side Zod validation for phone, National Address, postal code, and optional VAT number.
+
+The example intentionally revalidates the payload on the server; browser input constraints are treated as UX, not a trust boundary.
 
 ## Design principles
 
@@ -302,7 +333,8 @@ The resulting score is explicitly **heuristic**. It is a developer checklist, no
 - [x] `@arabdevkit/react` foundation
 - [x] CLI foundation
 - [x] `arabdevkit check --country <code>`
-- [ ] Framework examples
+- [x] First framework example: Next.js Saudi checkout
+- [ ] Additional framework examples
 
 ### v1.0
 - [ ] Broad Arab-country coverage
