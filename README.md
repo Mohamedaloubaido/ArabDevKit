@@ -148,7 +148,7 @@ faker.eg.person();
 faker.ae.address();
 ```
 
-Faker data is synthetic test data. Phone generation is derived from `libphonenumber-js` mobile example metadata and revalidated before being returned. Generated IBANs match the configured country structure and MOD-97 checksum, but **must never be treated as real bank accounts or used for payments**.
+Faker data is synthetic test data. Phone generation is derived from `libphonenumber-js` mobile example metada and revalidated before being returned. Generated IBANs match the configured country structure and MOD-97 checksum, but **must never be treated as real bank accounts or used for payments**.
 
 ### React
 
@@ -161,7 +161,7 @@ import { ArabAddressForm, ArabPhoneInput, CountrySelect, IbanInput } from "@arab
   language="ar"
   includeCallingCode
   onCountryChange={(country) => console.log(country.code)}
-/>;
+/>
 
 <ArabPhoneInput
   country="SA"
@@ -193,6 +193,20 @@ import { ArabAddressForm, ArabPhoneInput, CountrySelect, IbanInput } from "@arab
 ```
 
 The components are intentionally unstyled. They expose country metadata and validity through callbacks/data attributes rather than imposing a design system.
+
+## Postal profiles
+
+Postal behavior is country-aware rather than assumed globally. Saudi Arabia has a sourced 5-digit postal-code rule; the UAE is exposed as P.O.-Box-oriented; unsourced markets remain explicitly `unverified`.
+
+```ts
+import { getPostalProfile, validatePostalCode } from "@arabdevkit/core";
+
+validatePostalCode("١٣٣٣٧", "SA"); // valid, normalized to 13337
+getPostalProfile("AE").support; // "po-box"
+getPostalProfile("SY").support; // "unverified"
+```
+
+See `docs/postal-sources.md` for provenance and validation boundaries.
 
 ## Tax identifiers
 
@@ -234,6 +248,7 @@ arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
 arabdevkit phone "0501234567" --country SA
 arabdevkit tax "310122393500003" --country SA --kind vat
 arabdevkit business "7001234567" --country SA
+arabdevkit postal "13337" --country SA
 arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
 arabdevkit check --country SA --path .
 arabdevkit fake person --country SA --count 5 --seed 42
@@ -276,7 +291,7 @@ The resulting score is explicitly **heuristic**. It is a developer checklist, no
 
 ### v0.2 — Country primitives
 - [x] Country-specific address engine foundation (SA, AE, EG, SY)
-- [ ] Postal-code helpers where applicable
+- [x] Postal profiles and Saudi postal-code helper; UAE P.O. Box awareness
 - [x] Structural Saudi/UAE tax identifier validators with official verification links
 - [x] Business registry verification metadata for Saudi Arabia and the UAE
 - [x] IBAN helpers and country constraints (18 SWIFT-registered Arab markets)
