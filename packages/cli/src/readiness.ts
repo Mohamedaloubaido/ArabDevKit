@@ -212,6 +212,17 @@ export function auditProjectReadiness(
         new RegExp(escapeRegex(country.nameAr))
       ],
       recommendation: `Centralize ${country.code} metadata instead of scattering country constants through the codebase.`
+    },
+    {
+      id: "address",
+      label: "Country-aware address handling",
+      weight: 10,
+      patterns: [
+        /(?:getAddressSpec|validateAddress|normalizeAddress|ArabAddressForm)\s*\(?/,
+        /@arabdevkit\/(?:core|react)/,
+        /(?:postalCode|postal-code|address-level1|address-level2)/
+      ],
+      recommendation: `Use a country-aware ${country.code} address model instead of a single global address form.`
     }
   ];
 

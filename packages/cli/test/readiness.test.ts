@@ -30,13 +30,14 @@ describe("country readiness audit", () => {
     writeFileSync(
       join(root, "src", "app.tsx"),
       `
-        import { formatMoney, formatPhoneE164, isValidIban, toLatinDigits } from "@arabdevkit/core";
+        import { formatMoney, formatPhoneE164, getAddressSpec, isValidIban, toLatinDigits } from "@arabdevkit/core";
         export const market = { country: "SA", currency: "SAR" };
         export const Example = () => <main dir="rtl">مرحبا ١٢٣</main>;
         formatPhoneE164("0501234567", "SA");
         isValidIban("SA0380000000608010167519", "SA");
         toLatinDigits("١٢٣");
         formatMoney(10, "SA");
+        getAddressSpec("SA");
       `
     );
 
