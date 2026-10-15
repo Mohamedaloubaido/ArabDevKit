@@ -3,3 +3,4 @@ export * from "./text/index.js";
 export * from "./number/index.js";
 export * from "./phone/index.js";
 export * from "./money/index.js";
+export * from "./iban/index.js";

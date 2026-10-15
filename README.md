@@ -20,7 +20,7 @@ The first deeply-tested country modules are Saudi Arabia, UAE, Egypt, and Syria;
 
 | Package | Purpose | Status |
 | --- | --- | --- |
-| `@arabdevkit/core` | Countries, Arabic text, digits, phone, money | 🚧 Active |
+| `@arabdevkit/core` | Countries, Arabic text, digits, phone, money, IBAN | 🚧 Active |
 | `@arabdevkit/zod` | Country-aware Zod schemas | 🚧 Active |
 | `@arabdevkit/react` | Localized inputs and form primitives | Planned |
 | `@arabdevkit/faker` | Structurally valid local test data | Planned |
@@ -38,7 +38,9 @@ import {
   formatMoney,
   formatPhoneE164,
   getCountry,
+  isValidIban,
   listCountries,
+  parseIban,
   normalizeArabic,
   toLatinDigits
 } from "@arabdevkit/core";
@@ -66,6 +68,29 @@ formatMoney(50, "PS", { currency: "JOD" });
 
 formatPhoneE164("0501234567", "SA");
 // "+966501234567"
+
+isValidIban("SA03 8000 0000 6080 1016 7519", "SA");
+// true
+
+parseIban("JO94 CBJO 0010 0000 0000 0131 0003 02");
+// { countryCode: "JO", bankIdentifier: "CBJO", branchIdentifier: "0010", ... }
+```
+
+## IBAN coverage
+
+ArabDevKit validates ISO 13616 structure + BBAN country format + MOD-97 checksum for **18 Arab markets** currently present in the SWIFT IBAN Registry:
+
+`AE` `BH` `DJ` `EG` `IQ` `JO` `KW` `LB` `LY` `MR` `OM` `PS` `QA` `SA` `SD` `SO` `TN` `YE`
+
+Country metadata remains available for all 22 Arab markets; absence from this IBAN list means ArabDevKit does not claim an ISO 13616 national IBAN format for that market.
+
+```ts
+import { formatIban, getArabIbanSpec, isValidIban, parseIban } from "@arabdevkit/core";
+
+isValidIban("AE07 0331 2345 6789 0123 456", "AE"); // true
+formatIban("EG380019000500000000263180002");
+getArabIbanSpec("QA").ibanLength; // 29
+parseIban("IQ98NBIQ850123456789012")?.bankIdentifier; // "NBIQ"
 ```
 
 ### Zod
@@ -105,7 +130,7 @@ const customer = z.object({
 - [ ] Country-specific address models
 - [ ] Postal-code helpers where applicable
 - [ ] Verified tax/business identifier validators
-- [ ] IBAN helpers and country constraints
+- [x] IBAN helpers and country constraints (18 SWIFT-registered Arab markets)
 - [ ] Province/governorate datasets with provenance
 
 ### v0.3 — Developer experience

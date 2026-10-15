@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { isValidPhone, type ArabCountryCode } from "@arabdevkit/core";
+import {
+  isValidIban,
+  isValidPhone,
+  type ArabCountryCode,
+  type ArabIbanCountryCode
+} from "@arabdevkit/core";
 
 export function phone(country: ArabCountryCode) {
   return z.string().refine((value) => isValidPhone(value, country), {
@@ -7,7 +12,13 @@ export function phone(country: ArabCountryCode) {
   });
 }
 
-export const sa = { phone: () => phone("SA") } as const;
-export const ae = { phone: () => phone("AE") } as const;
-export const eg = { phone: () => phone("EG") } as const;
+export function iban(country: ArabIbanCountryCode) {
+  return z.string().refine((value) => isValidIban(value, country), {
+    message: `Invalid ${country} IBAN`
+  });
+}
+
+export const sa = { phone: () => phone("SA"), iban: () => iban("SA") } as const;
+export const ae = { phone: () => phone("AE"), iban: () => iban("AE") } as const;
+export const eg = { phone: () => phone("EG"), iban: () => iban("EG") } as const;
 export const sy = { phone: () => phone("SY") } as const;
