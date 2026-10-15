@@ -25,3 +25,18 @@ describe("React helpers", () => {
     expect(state.formatted).toBe("SA03 8000 0000 6080 1016 7519");
   });
 });
+
+describe("address helpers", () => {
+  it("builds Arabic Saudi address fields with structured region options", async () => {
+    const { getAddressFieldViewModels } = await import("../src/index.js");
+    const fields = getAddressFieldViewModels("SA", "ar");
+    const region = fields.find((field) => field.id === "subdivision");
+    expect(region?.label).toBe("المنطقة");
+    expect(region?.options).toHaveLength(13);
+  });
+
+  it("omits a postal code field from the UAE physical-address profile", async () => {
+    const { getAddressFieldViewModels } = await import("../src/index.js");
+    expect(getAddressFieldViewModels("AE").some((field) => field.id === "postalCode")).toBe(false);
+  });
+});
