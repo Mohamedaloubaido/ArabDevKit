@@ -10,3 +10,5 @@ export * from "./address/index.js";
 export * from "./tax/index.js";
 
 export * from "./business/index.js";
+
+export * from "./postal/index.js";
