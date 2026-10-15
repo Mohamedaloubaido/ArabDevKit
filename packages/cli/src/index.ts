@@ -15,6 +15,7 @@ import {
   type ArabCountryCode,
   type ArabIbanCountryCode
 } from "@arabdevkit/core";
+import { createArabFaker } from "@arabdevkit/faker";
 import { auditProjectReadiness } from "./readiness.js";
 
 const VERSION = "0.1.0";
@@ -43,6 +44,7 @@ Usage:
   arabdevkit phone <NUMBER> --country <CODE> [--json]
   arabdevkit normalize <TEXT> [--json]
   arabdevkit check --country <CODE> [--path <PATH>] [--json]
+  arabdevkit fake <person|address|company|phone|iban> --country <CODE> [--count <N>] [--seed <N>] [--json]
   arabdevkit --version
 
 Examples:
@@ -51,6 +53,7 @@ Examples:
   arabdevkit phone "0501234567" --country SA
   arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
   arabdevkit check --country SA --path .
+  arabdevkit fake person --country SA --count 3 --seed 42
 `);
 }
 
@@ -171,6 +174,49 @@ function checkCommand(args: string[]): void {
   console.log(report.disclaimer);
 }
 
+function fakeCommand(args: string[]): void {
+  const entity = args[0];
+  if (!entity || !["person", "address", "company", "phone", "iban"].includes(entity)) {
+    fail("Fake entity must be one of: person, address, company, phone, iban.");
+  }
+
+  const country = asCountryCode(option(args, "--country"));
+  const countRaw = option(args, "--count") ?? "1";
+  const count = Number(countRaw);
+  if (!Number.isInteger(count) || count < 1 || count > 1000) fail("--count must be an integer between 1 and 1000.");
+
+  const seedRaw = option(args, "--seed");
+  let seed: number | undefined;
+  if (seedRaw !== null) {
+    const parsedSeed = Number(seedRaw);
+    if (!Number.isInteger(parsedSeed)) fail("--seed must be an integer.");
+    seed = parsedSeed;
+  }
+
+  const fake = createArabFaker(country, seed === undefined ? {} : { seed });
+  const make = () => {
+    switch (entity) {
+      case "person": return fake.person();
+      case "address": return fake.address();
+      case "company": return fake.company();
+      case "phone": return fake.phone();
+      case "iban": return fake.iban();
+      default: return null;
+    }
+  };
+
+  const values = Array.from({ length: count }, make);
+  const payload = count === 1 ? values[0] : values;
+
+  if (hasFlag(args, "--json")) return printJson(payload);
+
+  for (const value of values) {
+    if (value === null) console.log(`${entity}: unavailable for ${country}`);
+    else if (typeof value === "object") console.log(JSON.stringify(value, null, 2));
+    else console.log(String(value));
+  }
+}
+
 export function runCli(args: string[]): void {
   if (args.length === 0 || hasFlag(args, "--help") || hasFlag(args, "-h")) return usage();
   if (hasFlag(args, "--version") || hasFlag(args, "-v")) return console.log(VERSION);
@@ -182,6 +228,7 @@ export function runCli(args: string[]): void {
     case "phone": return phoneCommand(rest);
     case "normalize": return normalizeCommand(rest);
     case "check": return checkCommand(rest);
+    case "fake": return fakeCommand(rest);
     default:
       fail(`Unknown command: ${command}. Run arabdevkit --help.`);
   }

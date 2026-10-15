@@ -17,7 +17,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@arabdevkit/core": "workspace:*"
+    "@arabdevkit/core": "workspace:*",
+    "@arabdevkit/faker": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.15.0"

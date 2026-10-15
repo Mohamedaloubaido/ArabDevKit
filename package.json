@@ -8,7 +8,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "typecheck": "pnpm --filter @arabdevkit/core typecheck && pnpm --filter @arabdevkit/core build && pnpm --filter @arabdevkit/zod typecheck && pnpm --filter @arabdevkit/cli typecheck"
+    "typecheck": "pnpm --filter @arabdevkit/core typecheck && pnpm --filter @arabdevkit/core build && pnpm --filter @arabdevkit/faker typecheck && pnpm --filter @arabdevkit/faker build && pnpm --filter @arabdevkit/zod typecheck && pnpm --filter @arabdevkit/cli typecheck"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
