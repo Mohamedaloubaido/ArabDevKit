@@ -12,3 +12,5 @@ export * from "./tax/index.js";
 export * from "./business/index.js";
 
 export * from "./postal/index.js";
+
+export * from "./capabilities/index.js";

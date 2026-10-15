@@ -5,6 +5,8 @@ import {
   formatPhoneNational,
   getArabIbanSpec,
   getCountry,
+  getCountryCapabilities,
+  listCountryCapabilities,
   getBusinessRegistrySpec,
   getPostalProfile,
   prepareBusinessIdentifierLookup,
@@ -47,6 +49,7 @@ function usage(): void {
 
 Usage:
   arabdevkit country <CODE> [--json]
+  arabdevkit matrix [--json]
   arabdevkit iban <IBAN> [--country <CODE>] [--json]
   arabdevkit phone <NUMBER> --country <CODE> [--json]
   arabdevkit tax <VALUE> --country <SA|AE> --kind <vat|tin|trn> [--json]
@@ -59,6 +62,7 @@ Usage:
 
 Examples:
   arabdevkit country SA
+  arabdevkit matrix
   arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
   arabdevkit phone "0501234567" --country SA
   arabdevkit tax "310122393500003" --country SA --kind vat
@@ -90,7 +94,8 @@ function countryCommand(args: string[]): void {
   const code = asCountryCode(args[0] ?? null);
   const country = getCountry(code);
   const iban = isArabIbanCountryCode(code) ? getArabIbanSpec(code) : null;
-  const payload = { ...country, capabilities: { iban: Boolean(iban) }, iban };
+  const capabilities = getCountryCapabilities(code);
+  const payload = { ...country, capabilities, iban };
 
   if (hasFlag(args, "--json")) return printJson(payload);
 
@@ -99,7 +104,25 @@ function countryCommand(args: string[]): void {
   console.log(`Calling code: ${country.callingCode}`);
   console.log(`Locales: ${country.locales.join(", ")}`);
   console.log(`Currencies: ${country.currencies.join(", ")}`);
+  console.log(`Address: ${capabilities.address} (${capabilities.subdivisionCount} subdivisions)`);
+  console.log(`Postal: ${capabilities.postal}`);
   console.log(`IBAN: ${iban ? `supported (${iban.ibanLength} chars)` : "not configured"}`);
+  console.log(`Tax identifiers: ${capabilities.taxIdentifiers.length ? capabilities.taxIdentifiers.join(", ") : "not configured"}`);
+  console.log(`Business registry: ${capabilities.businessRegistry ?? "not configured"}`);
+}
+
+function matrixCommand(args: string[]): void {
+  const rows = listCountryCapabilities();
+  if (hasFlag(args, "--json")) return printJson(rows);
+
+  console.log("CODE  ADDRESS     POSTAL         IBAN  TAX       BUSINESS");
+  for (const row of rows) {
+    const tax = row.taxIdentifiers.length ? row.taxIdentifiers.join("/") : "-";
+    const business = row.businessRegistry === "verification-only" ? "verify" : "-";
+    console.log(
+      `${row.countryCode.padEnd(5)} ${row.address.padEnd(11)} ${row.postal.padEnd(14)} ${String(row.iban ? "yes" : "no").padEnd(5)} ${tax.padEnd(9)} ${business}`
+    );
+  }
 }
 
 function ibanCommand(args: string[]): void {
@@ -295,6 +318,7 @@ export function runCli(args: string[]): void {
   const [command, ...rest] = args;
   switch (command) {
     case "country": return countryCommand(rest);
+    case "matrix": return matrixCommand(rest);
     case "iban": return ibanCommand(rest);
     case "phone": return phoneCommand(rest);
     case "tax": return taxCommand(rest);
