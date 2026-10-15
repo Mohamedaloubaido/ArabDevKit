@@ -24,7 +24,7 @@ The first deeply-tested country modules are Saudi Arabia, UAE, Egypt, and Syria;
 | `@arabdevkit/zod` | Country-aware Zod schemas | 🚧 Active |
 | `@arabdevkit/react` | Localized inputs and form primitives | Planned |
 | `@arabdevkit/faker` | Structurally valid local test data | Planned |
-| `@arabdevkit/cli` | Project audit and country-readiness checks | Planned |
+| `@arabdevkit/cli` | Country inspection, IBAN/phone validation, Arabic normalization | 🚧 Active |
 
 ## Quick start
 
@@ -100,9 +100,23 @@ import { z } from "zod";
 import { sa } from "@arabdevkit/zod";
 
 const customer = z.object({
-  phone: sa.phone()
+  phone: sa.phone(),
+  iban: sa.iban()
 });
 ```
+
+## CLI
+
+```bash
+pnpm add -g @arabdevkit/cli
+
+arabdevkit country SA
+arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
+arabdevkit phone "0501234567" --country SA
+arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
+```
+
+Every data command also supports `--json`, making the CLI usable in shell scripts and CI workflows.
 
 ## Design principles
 
@@ -136,7 +150,7 @@ const customer = z.object({
 ### v0.3 — Developer experience
 - [ ] `@arabdevkit/faker`
 - [ ] `@arabdevkit/react`
-- [ ] CLI
+- [x] CLI foundation
 - [ ] `arabdevkit check --country <code>`
 - [ ] Framework examples
 

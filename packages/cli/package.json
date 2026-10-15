@@ -1,0 +1,25 @@
+{
+  "name": "@arabdevkit/cli",
+  "version": "0.1.0",
+  "description": "Command-line tools for ArabDevKit country data and validation.",
+  "type": "module",
+  "bin": {
+    "arabdevkit": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@arabdevkit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0"
+  }
+}
