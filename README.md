@@ -23,7 +23,7 @@ The first deeply-tested country modules are Saudi Arabia, UAE, Egypt, and Syria;
 | `@arabdevkit/core` | Countries, Arabic text, digits, phone, money, IBAN | 🚧 Active |
 | `@arabdevkit/zod` | Country-aware Zod schemas | 🚧 Active |
 | `@arabdevkit/react` | Localized inputs and form primitives | Planned |
-| `@arabdevkit/faker` | Structurally valid local test data | Planned |
+| `@arabdevkit/faker` | Seedable synthetic people, addresses, companies, phones, and IBANs | 🚧 Active |
 | `@arabdevkit/cli` | Country inspection, IBAN/phone validation, Arabic normalization | 🚧 Active |
 
 ## Quick start
@@ -85,12 +85,13 @@ ArabDevKit validates ISO 13616 structure + BBAN country format + MOD-97 checksum
 Country metadata remains available for all 22 Arab markets; absence from this IBAN list means ArabDevKit does not claim an ISO 13616 national IBAN format for that market.
 
 ```ts
-import { formatIban, getArabIbanSpec, isValidIban, parseIban } from "@arabdevkit/core";
+import { createIban, formatIban, getArabIbanSpec, isValidIban, parseIban } from "@arabdevkit/core";
 
 isValidIban("AE07 0331 2345 6789 0123 456", "AE"); // true
 formatIban("EG380019000500000000263180002");
 getArabIbanSpec("QA").ibanLength; // 29
 parseIban("IQ98NBIQ850123456789012")?.bankIdentifier; // "NBIQ"
+createIban("SA", "80000000608010167519"); // "SA0380000000608010167519"
 ```
 
 ### Zod
@@ -105,6 +106,25 @@ const customer = z.object({
 });
 ```
 
+### Faker
+
+```ts
+import { createArabFaker, faker } from "@arabdevkit/faker";
+
+const sa = createArabFaker("SA", { seed: 42 });
+
+sa.person();
+sa.address();
+sa.company();
+sa.phone();
+sa.iban();
+
+faker.eg.person();
+faker.ae.address();
+```
+
+Faker data is synthetic test data. Phone generation is derived from `libphonenumber-js` mobile example metadata and revalidated before being returned. Generated IBANs match the configured country structure and MOD-97 checksum, but **must never be treated as real bank accounts or used for payments**.
+
 ## CLI
 
 ```bash
@@ -115,6 +135,8 @@ arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
 arabdevkit phone "0501234567" --country SA
 arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
 arabdevkit check --country SA --path .
+arabdevkit fake person --country SA --count 5 --seed 42
+arabdevkit fake iban --country AE --json
 ```
 
 Every data command also supports `--json`, making the CLI usable in shell scripts and CI workflows.
@@ -159,7 +181,7 @@ The resulting score is explicitly **heuristic**. It is a developer checklist, no
 - [ ] Province/governorate datasets with provenance
 
 ### v0.3 — Developer experience
-- [ ] `@arabdevkit/faker`
+- [x] `@arabdevkit/faker` foundation
 - [ ] `@arabdevkit/react`
 - [x] CLI foundation
 - [x] `arabdevkit check --country <code>`
