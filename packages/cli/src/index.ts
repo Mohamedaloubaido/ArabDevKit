@@ -15,6 +15,7 @@ import {
   type ArabCountryCode,
   type ArabIbanCountryCode
 } from "@arabdevkit/core";
+import { auditProjectReadiness } from "./readiness.js";
 
 const VERSION = "0.1.0";
 
@@ -41,6 +42,7 @@ Usage:
   arabdevkit iban <IBAN> [--country <CODE>] [--json]
   arabdevkit phone <NUMBER> --country <CODE> [--json]
   arabdevkit normalize <TEXT> [--json]
+  arabdevkit check --country <CODE> [--path <PATH>] [--json]
   arabdevkit --version
 
 Examples:
@@ -48,6 +50,7 @@ Examples:
   arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
   arabdevkit phone "0501234567" --country SA
   arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
+  arabdevkit check --country SA --path .
 `);
 }
 
@@ -146,6 +149,28 @@ function normalizeCommand(args: string[]): void {
   else console.log(payload.latinDigits);
 }
 
+function checkCommand(args: string[]): void {
+  const country = asCountryCode(option(args, "--country"));
+  const path = option(args, "--path") ?? ".";
+  const report = auditProjectReadiness(country, path);
+
+  if (hasFlag(args, "--json")) return printJson(report);
+
+  console.log(`ArabDevKit Readiness Audit — ${report.country} (${report.countryName})`);
+  console.log(`Path: ${report.root}`);
+  console.log(`Heuristic score: ${report.heuristicScore}/100`);
+  console.log(`Files scanned: ${report.filesScanned}${report.truncated ? "+ (scan limit reached)" : ""}`);
+  console.log("");
+
+  for (const signal of report.signals) {
+    console.log(`${signal.detected ? "✓" : "⚠"} ${signal.label} — ${signal.detected ? signal.weight : 0}/${signal.weight}`);
+    if (!signal.detected) console.log(`  ${signal.recommendation}`);
+  }
+
+  console.log("");
+  console.log(report.disclaimer);
+}
+
 export function runCli(args: string[]): void {
   if (args.length === 0 || hasFlag(args, "--help") || hasFlag(args, "-h")) return usage();
   if (hasFlag(args, "--version") || hasFlag(args, "-v")) return console.log(VERSION);
@@ -156,6 +181,7 @@ export function runCli(args: string[]): void {
     case "iban": return ibanCommand(rest);
     case "phone": return phoneCommand(rest);
     case "normalize": return normalizeCommand(rest);
+    case "check": return checkCommand(rest);
     default:
       fail(`Unknown command: ${command}. Run arabdevkit --help.`);
   }

@@ -114,9 +114,20 @@ arabdevkit country SA
 arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
 arabdevkit phone "0501234567" --country SA
 arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
+arabdevkit check --country SA --path .
 ```
 
 Every data command also supports `--json`, making the CLI usable in shell scripts and CI workflows.
+
+### Country readiness audit
+
+`arabdevkit check` scans source/config files for country-specific engineering signals such as Arabic locale configuration, RTL handling, local currency awareness, phone normalization, Arabic digits, centralized country metadata, and IBAN handling where applicable.
+
+```bash
+arabdevkit check --country AE --path ./my-app
+```
+
+The resulting score is explicitly **heuristic**. It is a developer checklist, not a legal, regulatory, accessibility, security, or production-readiness certification.
 
 ## Design principles
 
@@ -151,7 +162,7 @@ Every data command also supports `--json`, making the CLI usable in shell script
 - [ ] `@arabdevkit/faker`
 - [ ] `@arabdevkit/react`
 - [x] CLI foundation
-- [ ] `arabdevkit check --country <code>`
+- [x] `arabdevkit check --country <code>`
 - [ ] Framework examples
 
 ### v1.0
