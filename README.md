@@ -20,9 +20,9 @@ The first deeply-tested country modules are Saudi Arabia, UAE, Egypt, and Syria;
 
 | Package | Purpose | Status |
 | --- | --- | --- |
-| `@arabdevkit/core` | Countries, Arabic text, digits, phone, money, IBAN | 🚧 Active |
+| `@arabdevkit/core` | Countries, Arabic text, digits, phone, money, IBAN, addresses | 🚧 Active |
 | `@arabdevkit/zod` | Country-aware Zod schemas | 🚧 Active |
-| `@arabdevkit/react` | Accessible country, phone, and IBAN input primitives | 🚧 Active |
+| `@arabdevkit/react` | Country, phone, IBAN, and address form primitives | 🚧 Active |
 | `@arabdevkit/faker` | Seedable synthetic people, addresses, companies, phones, and IBANs | 🚧 Active |
 | `@arabdevkit/cli` | Country inspection, IBAN/phone validation, Arabic normalization | 🚧 Active |
 
@@ -102,9 +102,32 @@ import { sa } from "@arabdevkit/zod";
 
 const customer = z.object({
   phone: sa.phone(),
-  iban: sa.iban()
+  iban: sa.iban(),
+  address: sa.address()
 });
 ```
+
+### Address engine
+
+```ts
+import { getAddressSpec, listAddressSubdivisions, validateAddress } from "@arabdevkit/core";
+
+getAddressSpec("SA").fields;
+listAddressSubdivisions("AE"); // 7 emirates
+listAddressSubdivisions("EG"); // 27 governorates
+listAddressSubdivisions("SY"); // 14 governorates
+
+validateAddress("SA", {
+  buildingNumber: "2929",
+  street: "ريحانة بنت زيد",
+  district: "العارض",
+  city: "الرياض",
+  postalCode: "13337",
+  secondaryNumber: "8118"
+});
+```
+
+Country-specific address rules are currently structured for Saudi Arabia, UAE, Egypt, and Syria. Other Arab markets use a conservative generic profile until their local rules are sourced and tested.
 
 ### Faker
 
@@ -130,7 +153,7 @@ Faker data is synthetic test data. Phone generation is derived from `libphonenum
 `@arabdevkit/react` provides unstyled, accessible primitives that reuse the same core country and validation logic. All native input/select props are passed through so teams keep control over styling and form libraries.
 
 ```tsx
-import { ArabPhoneInput, CountrySelect, IbanInput } from "@arabdevkit/react";
+import { ArabAddressForm, ArabPhoneInput, CountrySelect, IbanInput } from "@arabdevkit/react";
 
 <CountrySelect
   language="ar"
@@ -155,6 +178,16 @@ import { ArabPhoneInput, CountrySelect, IbanInput } from "@arabdevkit/react";
     console.log(state.valid);
   }}
 />;
+
+<ArabAddressForm
+  country="SA"
+  language="ar"
+  value={address}
+  onAddressChange={(next, validation) => {
+    setAddress(next);
+    console.log(validation.valid);
+  }}
+/>;
 ```
 
 The components are intentionally unstyled. They expose country metadata and validity through callbacks/data attributes rather than imposing a design system.
@@ -177,7 +210,7 @@ Every data command also supports `--json`, making the CLI usable in shell script
 
 ### Country readiness audit
 
-`arabdevkit check` scans source/config files for country-specific engineering signals such as Arabic locale configuration, RTL handling, local currency awareness, phone normalization, Arabic digits, centralized country metadata, and IBAN handling where applicable.
+`arabdevkit check` scans source/config files for country-specific engineering signals such as Arabic locale configuration, RTL handling, local currency awareness, phone normalization, Arabic digits, country-aware address handling, centralized country metadata, and IBAN handling where applicable.
 
 ```bash
 arabdevkit check --country AE --path ./my-app
@@ -208,11 +241,11 @@ The resulting score is explicitly **heuristic**. It is a developer checklist, no
 - [x] CI pipeline
 
 ### v0.2 — Country primitives
-- [ ] Country-specific address models
+- [x] Country-specific address engine foundation (SA, AE, EG, SY)
 - [ ] Postal-code helpers where applicable
 - [ ] Verified tax/business identifier validators
 - [x] IBAN helpers and country constraints (18 SWIFT-registered Arab markets)
-- [ ] Province/governorate datasets with provenance
+- [x] Provenanced subdivision datasets for SA / AE / EG / SY
 
 ### v0.3 — Developer experience
 - [x] `@arabdevkit/faker` foundation
