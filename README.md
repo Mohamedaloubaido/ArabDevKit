@@ -12,12 +12,9 @@ Software teams across the Arab world repeatedly rebuild the same local plumbing:
 
 **Early development — v0.1**
 
-Initial country profiles:
+Country registry: **22 Arab markets**, with ISO codes, Arabic/English names, calling codes, locales, and currency metadata.
 
-- 🇸🇦 Saudi Arabia (`SA`)
-- 🇦🇪 United Arab Emirates (`AE`)
-- 🇪🇬 Egypt (`EG`)
-- 🇸🇾 Syria (`SY`)
+The first deeply-tested country modules are Saudi Arabia, UAE, Egypt, and Syria; country-specific regulatory validators are added only when backed by authoritative specifications.
 
 ## Packages
 
@@ -37,9 +34,11 @@ pnpm add @arabdevkit/core
 
 ```ts
 import {
+  findCountryByCallingCode,
   formatMoney,
   formatPhoneE164,
   getCountry,
+  listCountries,
   normalizeArabic,
   toLatinDigits
 } from "@arabdevkit/core";
@@ -51,10 +50,19 @@ toLatinDigits("رقم الطلب ١٢٣٤٥");
 // "رقم الطلب 12345"
 
 getCountry("AE");
-// { code: "AE", currency: "AED", callingCode: "+971", ... }
+// { code: "AE", defaultCurrency: "AED", callingCode: "+971", ... }
+
+listCountries().length;
+// 22
+
+findCountryByCallingCode("+974")?.code;
+// "QA"
 
 formatMoney(199, "SA");
 // localized SAR output
+
+formatMoney(50, "PS", { currency: "JOD" });
+// Palestine has no single default currency, so currency is explicit
 
 formatPhoneE164("0501234567", "SA");
 // "+966501234567"
@@ -84,7 +92,8 @@ const customer = z.object({
 ### v0.1 — Foundation
 - [x] Monorepo architecture
 - [x] Country registry
-- [x] Saudi Arabia, UAE, Egypt, Syria profiles
+- [x] Registry for 22 Arab markets
+- [x] Saudi Arabia, UAE, Egypt, Syria foundational modules
 - [x] Arabic text normalization
 - [x] Arabic-Indic / Latin digit conversion
 - [x] International phone parsing and validation

@@ -6,6 +6,7 @@ export const egypt = {
   name: "Egypt",
   nameAr: "مصر",
   callingCode: "+20",
-  currency: "EGP",
+  defaultCurrency: "EGP",
+  currencies: ["EGP"],
   locales: ["ar-EG", "en-EG"]
 } as const satisfies CountryProfile;

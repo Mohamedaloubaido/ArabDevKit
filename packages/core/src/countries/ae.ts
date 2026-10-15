@@ -6,6 +6,7 @@ export const unitedArabEmirates = {
   name: "United Arab Emirates",
   nameAr: "الإمارات العربية المتحدة",
   callingCode: "+971",
-  currency: "AED",
+  defaultCurrency: "AED",
+  currencies: ["AED"],
   locales: ["ar-AE", "en-AE"]
 } as const satisfies CountryProfile;

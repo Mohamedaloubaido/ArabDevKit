@@ -6,6 +6,7 @@ export const saudiArabia = {
   name: "Saudi Arabia",
   nameAr: "السعودية",
   callingCode: "+966",
-  currency: "SAR",
+  defaultCurrency: "SAR",
+  currencies: ["SAR"],
   locales: ["ar-SA", "en-SA"]
 } as const satisfies CountryProfile;

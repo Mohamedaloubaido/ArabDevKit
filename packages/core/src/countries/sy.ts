@@ -6,6 +6,7 @@ export const syria = {
   name: "Syria",
   nameAr: "سوريا",
   callingCode: "+963",
-  currency: "SYP",
+  defaultCurrency: "SYP",
+  currencies: ["SYP"],
   locales: ["ar-SY", "en-SY"]
 } as const satisfies CountryProfile;
