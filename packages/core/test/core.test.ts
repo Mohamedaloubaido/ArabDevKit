@@ -112,4 +112,46 @@ describe("IBAN", () => {
     expect(iban).toBe("SA0380000000608010167519");
     expect(isValidIban(iban ?? "", "SA")).toBe(true);
   });
+
+});
+
+describe("address engine", () => {
+  it("models Saudi National Address fields and validates Arabic-Indic digits", async () => {
+    const { getAddressSpec, normalizeAddress, validateAddress } = await import("../src/index.js");
+    const spec = getAddressSpec("SA");
+    expect(spec.support).toBe("structured");
+    expect(spec.fields.map((field) => field.id)).toContain("secondaryNumber");
+
+    const address = normalizeAddress("SA", {
+      buildingNumber: "٢٩٢٩",
+      street: "ريحانة بنت زيد",
+      district: "العارض",
+      city: "الرياض",
+      postalCode: "١٣٣٣٧",
+      secondaryNumber: "٨١١٨"
+    });
+
+    expect(address.buildingNumber).toBe("2929");
+    expect(validateAddress("SA", address).valid).toBe(true);
+  });
+
+  it("exposes the seven UAE emirates and rejects unknown subdivisions", async () => {
+    const { listAddressSubdivisions, validateAddressField } = await import("../src/index.js");
+    expect(listAddressSubdivisions("AE")).toHaveLength(7);
+    expect(validateAddressField("AE", "subdivision", "Dubai").valid).toBe(true);
+    expect(validateAddressField("AE", "subdivision", "Unknown Emirate").reason).toBe("unknown-subdivision");
+  });
+
+  it("exposes 27 Egyptian and 14 Syrian governorates", async () => {
+    const { listAddressSubdivisions } = await import("../src/index.js");
+    expect(listAddressSubdivisions("EG")).toHaveLength(27);
+    expect(listAddressSubdivisions("SY")).toHaveLength(14);
+  });
+
+  it("uses a conservative generic profile for other Arab markets", async () => {
+    const { getAddressSpec } = await import("../src/index.js");
+    const spec = getAddressSpec("MA");
+    expect(spec.support).toBe("generic");
+    expect(spec.notes.join(" ")).toMatch(/not asserted/i);
+  });
 });
