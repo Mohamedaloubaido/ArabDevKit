@@ -226,6 +226,19 @@ export function auditProjectReadiness(
         : `Do not assume a tax identifier format for ${country.code} until an authoritative specification is configured.`
     },
     {
+      id: "business-registry",
+      label: "Business registry verification",
+      weight: 10,
+      patterns: [
+        /(?:getBusinessRegistrySpec|prepareBusinessIdentifierLookup|normalizeBusinessIdentifier)\s*\(?/,
+        /authoritativeVerificationRequired/,
+        /(?:commercial registration|economic license|economic licence|unified national number)/i
+      ],
+      recommendation: country.code === "SA" || country.code === "AE"
+        ? `Use the configured ${country.code} official business registry instead of inferring licence validity from a local regex.`
+        : `Do not infer a business identifier format for ${country.code} until an official registry/specification is configured.`
+    },
+    {
       id: "address",
       label: "Country-aware address handling",
       weight: 10,

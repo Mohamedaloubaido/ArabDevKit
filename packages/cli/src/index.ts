@@ -5,6 +5,8 @@ import {
   formatPhoneNational,
   getArabIbanSpec,
   getCountry,
+  getBusinessRegistrySpec,
+  prepareBusinessIdentifierLookup,
   isArabCountryCode,
   isArabIbanCountryCode,
   isValidPhone,
@@ -15,7 +17,8 @@ import {
   validateTaxIdentifier,
   type ArabCountryCode,
   type ArabIbanCountryCode,
-  type TaxIdentifierKind
+  type TaxIdentifierKind,
+  type BusinessRegistryCountryCode
 } from "@arabdevkit/core";
 import { createArabFaker } from "@arabdevkit/faker";
 import { auditProjectReadiness } from "./readiness.js";
@@ -45,6 +48,7 @@ Usage:
   arabdevkit iban <IBAN> [--country <CODE>] [--json]
   arabdevkit phone <NUMBER> --country <CODE> [--json]
   arabdevkit tax <VALUE> --country <SA|AE> --kind <vat|tin|trn> [--json]
+  arabdevkit business [VALUE] --country <SA|AE> [--json]
   arabdevkit normalize <TEXT> [--json]
   arabdevkit check --country <CODE> [--path <PATH>] [--json]
   arabdevkit fake <person|address|company|phone|iban> --country <CODE> [--count <N>] [--seed <N>] [--json]
@@ -55,6 +59,7 @@ Examples:
   arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
   arabdevkit phone "0501234567" --country SA
   arabdevkit tax "310122393500003" --country SA --kind vat
+  arabdevkit business "7001234567" --country SA
   arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
   arabdevkit check --country SA --path .
   arabdevkit fake person --country SA --count 3 --seed 42
@@ -158,6 +163,29 @@ function taxCommand(args: string[]): void {
   if (!result.valid) process.exitCode = 1;
 }
 
+function businessCommand(args: string[]): void {
+  const value = args[0]?.startsWith("--") ? undefined : args[0];
+  const countryRaw = option(args, "--country")?.toUpperCase();
+  if (countryRaw !== "SA" && countryRaw !== "AE") {
+    fail("Business registry verification is currently configured for SA and AE only.");
+  }
+
+  const country = countryRaw as BusinessRegistryCountryCode;
+  const spec = getBusinessRegistrySpec(country);
+  if (!spec) fail(`No business registry verifier configured for ${country}.`);
+  const lookup = prepareBusinessIdentifierLookup(value, country);
+  const payload = { ...lookup, searchBy: spec.searchBy, notes: spec.notes };
+
+  if (hasFlag(args, "--json")) return printJson(payload);
+
+  console.log(`${country} — ${spec.label}`);
+  if (lookup.normalized) console.log(`Identifier: ${lookup.normalized}`);
+  console.log("Validation: authoritative verification required (no structural validity is inferred).");
+  console.log(`Authority: ${lookup.authority}`);
+  console.log(`Search by: ${spec.searchBy.join(", ")}`);
+  console.log(`Official verification: ${lookup.verificationUrl}`);
+}
+
 function normalizeCommand(args: string[]): void {
   const text = args.filter((arg) => arg !== "--json").join(" ");
   if (!text) fail("Missing text.");
@@ -247,6 +275,7 @@ export function runCli(args: string[]): void {
     case "iban": return ibanCommand(rest);
     case "phone": return phoneCommand(rest);
     case "tax": return taxCommand(rest);
+    case "business": return businessCommand(rest);
     case "normalize": return normalizeCommand(rest);
     case "check": return checkCommand(rest);
     case "fake": return fakeCommand(rest);
