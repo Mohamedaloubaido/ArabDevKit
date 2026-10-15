@@ -20,7 +20,7 @@ The first deeply-tested country modules are Saudi Arabia, UAE, Egypt, and Syria;
 
 | Package | Purpose | Status |
 | --- | --- | --- |
-| `@arabdevkit/core` | Countries, Arabic text, digits, phone, money, IBAN, addresses | 🚧 Active |
+| `@arabdevkit/core` | Countries, Arabic text, digits, phone, money, IBAN, addresses, tax IDs, business registries | 🚧 Active |
 | `@arabdevkit/zod` | Country-aware Zod schemas | 🚧 Active |
 | `@arabdevkit/react` | Country, phone, IBAN, and address form primitives | 🚧 Active |
 | `@arabdevkit/faker` | Seedable synthetic people, addresses, companies, phones, and IBANs | 🚧 Active |
@@ -103,7 +103,9 @@ import { sa } from "@arabdevkit/zod";
 const customer = z.object({
   phone: sa.phone(),
   iban: sa.iban(),
-  address: sa.address()
+  address: sa.address(),
+  vatNumber: sa.vatNumber(),
+  tin: sa.tin()
 });
 ```
 
@@ -192,6 +194,36 @@ import { ArabAddressForm, ArabPhoneInput, CountrySelect, IbanInput } from "@arab
 
 The components are intentionally unstyled. They expose country metadata and validity through callbacks/data attributes rather than imposing a design system.
 
+## Tax identifiers
+
+ArabDevKit currently provides structural tax identifier support for Saudi Arabia and the UAE. It normalizes Arabic-Indic digits and common separators, but **does not verify registration status with the tax authority**.
+
+```ts
+import { validateTaxIdentifier } from "@arabdevkit/core";
+
+validateTaxIdentifier("٣١٠١٢٢٣٩٣٥٠٠٠٠٣", "SA", "vat");
+validateTaxIdentifier("1234567890", "SA", "tin");
+validateTaxIdentifier("100123456700003", "AE", "trn");
+```
+
+React also exposes `TaxIdentifierInput`, and Zod exposes `sa.vatNumber()`, `sa.tin()`, and `ae.trn()`. See `docs/tax-sources.md` for the authority sources and validation boundary.
+
+## Business registry verification
+
+ArabDevKit avoids inventing regex validators for business identifiers when the issuing authority does not expose a complete format specification. Saudi Arabia and the UAE currently use a `verification-only` registry flow:
+
+```ts
+import { prepareBusinessIdentifierLookup } from "@arabdevkit/core";
+
+prepareBusinessIdentifierLookup("٧٠٠١٢٣٤٥٦٧", "SA");
+// { normalized: "7001234567", structurallyValid: null, authoritativeVerificationRequired: true, ... }
+
+prepareBusinessIdentifierLookup(undefined, "AE");
+// returns the official National Economic Register verification route
+```
+
+See `docs/business-sources.md` for the authority sources and verification boundary.
+
 ## CLI
 
 ```bash
@@ -200,6 +232,8 @@ pnpm add -g @arabdevkit/cli
 arabdevkit country SA
 arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
 arabdevkit phone "0501234567" --country SA
+arabdevkit tax "310122393500003" --country SA --kind vat
+arabdevkit business "7001234567" --country SA
 arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
 arabdevkit check --country SA --path .
 arabdevkit fake person --country SA --count 5 --seed 42
@@ -210,7 +244,7 @@ Every data command also supports `--json`, making the CLI usable in shell script
 
 ### Country readiness audit
 
-`arabdevkit check` scans source/config files for country-specific engineering signals such as Arabic locale configuration, RTL handling, local currency awareness, phone normalization, Arabic digits, country-aware address handling, centralized country metadata, and IBAN handling where applicable.
+`arabdevkit check` scans source/config files for country-specific engineering signals such as Arabic locale configuration, RTL handling, local currency awareness, phone normalization, Arabic digits, country-aware address handling, centralized country metadata, tax/business-registry handling, and IBAN handling where applicable.
 
 ```bash
 arabdevkit check --country AE --path ./my-app
@@ -243,7 +277,8 @@ The resulting score is explicitly **heuristic**. It is a developer checklist, no
 ### v0.2 — Country primitives
 - [x] Country-specific address engine foundation (SA, AE, EG, SY)
 - [ ] Postal-code helpers where applicable
-- [ ] Verified tax/business identifier validators
+- [x] Structural Saudi/UAE tax identifier validators with official verification links
+- [x] Business registry verification metadata for Saudi Arabia and the UAE
 - [x] IBAN helpers and country constraints (18 SWIFT-registered Arab markets)
 - [x] Provenanced subdivision datasets for SA / AE / EG / SY
 
