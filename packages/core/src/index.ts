@@ -8,3 +8,5 @@ export * from "./iban/index.js";
 export * from "./address/index.js";
 
 export * from "./tax/index.js";
+
+export * from "./business/index.js";
