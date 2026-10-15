@@ -6,7 +6,9 @@ import {
   getArabIbanSpec,
   getCountry,
   getBusinessRegistrySpec,
+  getPostalProfile,
   prepareBusinessIdentifierLookup,
+  validatePostalCode,
   isArabCountryCode,
   isArabIbanCountryCode,
   isValidPhone,
@@ -49,6 +51,7 @@ Usage:
   arabdevkit phone <NUMBER> --country <CODE> [--json]
   arabdevkit tax <VALUE> --country <SA|AE> --kind <vat|tin|trn> [--json]
   arabdevkit business [VALUE] --country <SA|AE> [--json]
+  arabdevkit postal [VALUE] --country <CODE> [--json]
   arabdevkit normalize <TEXT> [--json]
   arabdevkit check --country <CODE> [--path <PATH>] [--json]
   arabdevkit fake <person|address|company|phone|iban> --country <CODE> [--count <N>] [--seed <N>] [--json]
@@ -60,6 +63,7 @@ Examples:
   arabdevkit phone "0501234567" --country SA
   arabdevkit tax "310122393500003" --country SA --kind vat
   arabdevkit business "7001234567" --country SA
+  arabdevkit postal "13337" --country SA
   arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
   arabdevkit check --country SA --path .
   arabdevkit fake person --country SA --count 3 --seed 42
@@ -186,6 +190,25 @@ function businessCommand(args: string[]): void {
   console.log(`Official verification: ${lookup.verificationUrl}`);
 }
 
+function postalCommand(args: string[]): void {
+  const value = args[0]?.startsWith("--") ? undefined : args[0];
+  const country = asCountryCode(option(args, "--country"));
+  const profile = getPostalProfile(country);
+  const validation = value === undefined ? null : validatePostalCode(value, country);
+  const payload = { profile, validation };
+
+  if (hasFlag(args, "--json")) return printJson(payload);
+
+  console.log(`${country} postal mode: ${profile.support}`);
+  if (validation) {
+    console.log(`Postal code: ${validation.normalized}`);
+    console.log(`Status: ${validation.valid ? "structurally valid" : validation.reason}`);
+  }
+  if (profile.support === "po-box") console.log("Use P.O. Box + physical address according to the configured postal profile.");
+  if (profile.support === "unverified") console.log("No country-specific postal rule is asserted yet.");
+  if (profile.sourceUrl) console.log(`Source: ${profile.sourceUrl}`);
+}
+
 function normalizeCommand(args: string[]): void {
   const text = args.filter((arg) => arg !== "--json").join(" ");
   if (!text) fail("Missing text.");
@@ -276,6 +299,7 @@ export function runCli(args: string[]): void {
     case "phone": return phoneCommand(rest);
     case "tax": return taxCommand(rest);
     case "business": return businessCommand(rest);
+    case "postal": return postalCommand(rest);
     case "normalize": return normalizeCommand(rest);
     case "check": return checkCommand(rest);
     case "fake": return fakeCommand(rest);
