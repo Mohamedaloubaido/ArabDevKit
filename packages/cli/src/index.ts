@@ -12,8 +12,10 @@ import {
   parseIban,
   toLatinDigits,
   validateIban,
+  validateTaxIdentifier,
   type ArabCountryCode,
-  type ArabIbanCountryCode
+  type ArabIbanCountryCode,
+  type TaxIdentifierKind
 } from "@arabdevkit/core";
 import { createArabFaker } from "@arabdevkit/faker";
 import { auditProjectReadiness } from "./readiness.js";
@@ -42,6 +44,7 @@ Usage:
   arabdevkit country <CODE> [--json]
   arabdevkit iban <IBAN> [--country <CODE>] [--json]
   arabdevkit phone <NUMBER> --country <CODE> [--json]
+  arabdevkit tax <VALUE> --country <SA|AE> --kind <vat|tin|trn> [--json]
   arabdevkit normalize <TEXT> [--json]
   arabdevkit check --country <CODE> [--path <PATH>] [--json]
   arabdevkit fake <person|address|company|phone|iban> --country <CODE> [--count <N>] [--seed <N>] [--json]
@@ -51,6 +54,7 @@ Examples:
   arabdevkit country SA
   arabdevkit iban "SA03 8000 0000 6080 1016 7519" --country SA
   arabdevkit phone "0501234567" --country SA
+  arabdevkit tax "310122393500003" --country SA --kind vat
   arabdevkit normalize "إِلَى السُّعُودِيَّةِ ١٢٣"
   arabdevkit check --country SA --path .
   arabdevkit fake person --country SA --count 3 --seed 42
@@ -136,6 +140,22 @@ function phoneCommand(args: string[]): void {
   }
 
   if (!valid) process.exitCode = 1;
+}
+
+function taxCommand(args: string[]): void {
+  const input = args[0];
+  if (!input) fail("Missing tax identifier value.");
+  const countryRaw = option(args, "--country")?.toUpperCase();
+  if (countryRaw !== "SA" && countryRaw !== "AE") fail("Tax identifiers are currently configured for SA and AE only.");
+  const kindRaw = option(args, "--kind")?.toLowerCase();
+  if (kindRaw !== "vat" && kindRaw !== "tin" && kindRaw !== "trn") fail("--kind must be vat, tin, or trn.");
+  const result = validateTaxIdentifier(input, countryRaw, kindRaw as TaxIdentifierKind);
+  if (hasFlag(args, "--json")) return printJson(result);
+  console.log(`${result.valid ? "✓" : "✗"} ${result.valid ? "Structurally valid" : "Invalid"} ${countryRaw} ${kindRaw.toUpperCase()}`);
+  console.log(`Normalized: ${result.normalized}`);
+  console.log("Note: structural validation only; official registration status is not verified.");
+  if (result.verificationUrl) console.log(`Official verification: ${result.verificationUrl}`);
+  if (!result.valid) process.exitCode = 1;
 }
 
 function normalizeCommand(args: string[]): void {
@@ -226,6 +246,7 @@ export function runCli(args: string[]): void {
     case "country": return countryCommand(rest);
     case "iban": return ibanCommand(rest);
     case "phone": return phoneCommand(rest);
+    case "tax": return taxCommand(rest);
     case "normalize": return normalizeCommand(rest);
     case "check": return checkCommand(rest);
     case "fake": return fakeCommand(rest);

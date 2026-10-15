@@ -214,6 +214,18 @@ export function auditProjectReadiness(
       recommendation: `Centralize ${country.code} metadata instead of scattering country constants through the codebase.`
     },
     {
+      id: "tax-identifiers",
+      label: "Tax identifier handling",
+      weight: 10,
+      patterns: [
+        /(?:validateTaxIdentifier|isValidSaudiVatNumber|isValidSaudiTin|isValidUaeTrn|TaxIdentifierInput)\s*\(?/,
+        /@arabdevkit\/(?:core|react|zod)/
+      ],
+      recommendation: country.code === "SA" || country.code === "AE"
+        ? `Use structural ${country.code} tax identifier validation and official authority verification links.`
+        : `Do not assume a tax identifier format for ${country.code} until an authoritative specification is configured.`
+    },
+    {
       id: "address",
       label: "Country-aware address handling",
       weight: 10,
