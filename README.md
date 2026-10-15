@@ -22,7 +22,7 @@ The first deeply-tested country modules are Saudi Arabia, UAE, Egypt, and Syria;
 | --- | --- | --- |
 | `@arabdevkit/core` | Countries, Arabic text, digits, phone, money, IBAN | 🚧 Active |
 | `@arabdevkit/zod` | Country-aware Zod schemas | 🚧 Active |
-| `@arabdevkit/react` | Localized inputs and form primitives | Planned |
+| `@arabdevkit/react` | Accessible country, phone, and IBAN input primitives | 🚧 Active |
 | `@arabdevkit/faker` | Seedable synthetic people, addresses, companies, phones, and IBANs | 🚧 Active |
 | `@arabdevkit/cli` | Country inspection, IBAN/phone validation, Arabic normalization | 🚧 Active |
 
@@ -125,6 +125,40 @@ faker.ae.address();
 
 Faker data is synthetic test data. Phone generation is derived from `libphonenumber-js` mobile example metadata and revalidated before being returned. Generated IBANs match the configured country structure and MOD-97 checksum, but **must never be treated as real bank accounts or used for payments**.
 
+### React
+
+`@arabdevkit/react` provides unstyled, accessible primitives that reuse the same core country and validation logic. All native input/select props are passed through so teams keep control over styling and form libraries.
+
+```tsx
+import { ArabPhoneInput, CountrySelect, IbanInput } from "@arabdevkit/react";
+
+<CountrySelect
+  language="ar"
+  includeCallingCode
+  onCountryChange={(country) => console.log(country.code)}
+/>;
+
+<ArabPhoneInput
+  country="SA"
+  value={phone}
+  onValueChange={(next, state) => {
+    setPhone(next);
+    console.log(state.valid, state.e164);
+  }}
+/>;
+
+<IbanInput
+  country="AE"
+  value={iban}
+  onValueChange={(next, state) => {
+    setIban(next);
+    console.log(state.valid);
+  }}
+/>;
+```
+
+The components are intentionally unstyled. They expose country metadata and validity through callbacks/data attributes rather than imposing a design system.
+
 ## CLI
 
 ```bash
@@ -182,7 +216,7 @@ The resulting score is explicitly **heuristic**. It is a developer checklist, no
 
 ### v0.3 — Developer experience
 - [x] `@arabdevkit/faker` foundation
-- [ ] `@arabdevkit/react`
+- [x] `@arabdevkit/react` foundation
 - [x] CLI foundation
 - [x] `arabdevkit check --country <code>`
 - [ ] Framework examples
