@@ -6,3 +6,5 @@ export * from "./money/index.js";
 export * from "./iban/index.js";
 
 export * from "./address/index.js";
+
+export * from "./tax/index.js";

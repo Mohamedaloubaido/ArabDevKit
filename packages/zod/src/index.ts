@@ -3,6 +3,7 @@ import {
   isValidIban,
   isValidPhone,
   validateAddress,
+  validateTaxIdentifier,
   type AddressValue,
   type ArabCountryCode,
   type ArabIbanCountryCode
@@ -30,7 +31,13 @@ export function address(country: ArabCountryCode) {
   });
 }
 
-export const sa = { phone: () => phone("SA"), iban: () => iban("SA"), address: () => address("SA") } as const;
-export const ae = { phone: () => phone("AE"), iban: () => iban("AE"), address: () => address("AE") } as const;
+export function taxIdentifier(country: "SA" | "AE", kind: "vat" | "tin" | "trn") {
+  return z.string().refine((value) => validateTaxIdentifier(value, country, kind).valid, {
+    message: `Invalid ${country} ${kind.toUpperCase()} structure`
+  });
+}
+
+export const sa = { phone: () => phone("SA"), iban: () => iban("SA"), address: () => address("SA"), vatNumber: () => taxIdentifier("SA", "vat"), tin: () => taxIdentifier("SA", "tin") } as const;
+export const ae = { phone: () => phone("AE"), iban: () => iban("AE"), address: () => address("AE"), trn: () => taxIdentifier("AE", "trn") } as const;
 export const eg = { phone: () => phone("EG"), iban: () => iban("EG"), address: () => address("EG") } as const;
 export const sy = { phone: () => phone("SY"), address: () => address("SY") } as const;
